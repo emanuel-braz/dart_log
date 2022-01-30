@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dart_log/src/logger.dart';
 
+/// get json formatted
 String jsonFormat(String json) {
   try {
     if (json.startsWith("{")) {
@@ -25,7 +26,7 @@ String _convert(dynamic object, int deep, {bool isObject = false}) {
   if (object is Map) {
     var list = object.keys.toList();
     if (!isObject) {
-      buffer.write(getDeepSpace(deep));
+      buffer.write(_getDeepSpace(deep));
     }
     buffer.write("{");
     if (list.isEmpty) {
@@ -33,7 +34,7 @@ String _convert(dynamic object, int deep, {bool isObject = false}) {
     } else {
       buffer.write("\n");
       for (int i = 0; i < list.length; i++) {
-        buffer.write("${getDeepSpace(nextDeep)}\"${list[i]}\":");
+        buffer.write("${_getDeepSpace(nextDeep)}\"${list[i]}\":");
         buffer.write(_convert(object[list[i]], nextDeep, isObject: true));
         if (i < list.length - 1) {
           buffer.write(",");
@@ -41,11 +42,11 @@ String _convert(dynamic object, int deep, {bool isObject = false}) {
         }
       }
       buffer.write("\n");
-      buffer.write("${getDeepSpace(deep)}}");
+      buffer.write("${_getDeepSpace(deep)}}");
     }
   } else if (object is List) {
     if (!isObject) {
-      buffer.write(getDeepSpace(deep));
+      buffer.write(_getDeepSpace(deep));
     }
     buffer.write("[");
     if (object.isEmpty) {
@@ -60,7 +61,7 @@ String _convert(dynamic object, int deep, {bool isObject = false}) {
         }
       }
       buffer.write("\n");
-      buffer.write("${getDeepSpace(deep)}]");
+      buffer.write("${_getDeepSpace(deep)}]");
     }
   } else if (object is String) {
     buffer.write("\"$object\"");
@@ -72,7 +73,7 @@ String _convert(dynamic object, int deep, {bool isObject = false}) {
   return buffer.toString();
 }
 
-String getDeepSpace(int deep) {
+String _getDeepSpace(int deep) {
   var tab = StringBuffer();
   for (int i = 0; i < deep; i++) {
     tab.write("\t");

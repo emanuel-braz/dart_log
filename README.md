@@ -29,12 +29,18 @@ logger.d('{"id": 123}', isJson: true);
 logger.prod('message');
 ```
 
-#### All logs enabled in release mode
-```s
-flutter run --dart-define d_log_verbose="true"
+#### All logs enabled in release mode (using dart-define)
+```bash
+flutter build apk --release --dart-define dart_log_verbose="true"
 ```
 
 #### Print max to "N" chars (useful with long api responses)
 ```dart
 logger.d('long response from API', maxChars: 10000);
+```
+
+#### `fileLinkLevel`: use this to get the link of the file that dispatched the log
+```dart
+// default = 3
+logger.d('Link to file', fileLinkLevel: 3);
 ```

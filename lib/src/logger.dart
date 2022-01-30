@@ -1,44 +1,65 @@
 // ignore_for_file: avoid_print
+// ignore_for_file: constant_identifier_names
 import 'dart:developer' as dev;
 import 'dart:math';
 import 'package:dart_log/src/util/util.dart';
 
-// ignore: constant_identifier_names
 const _MAX_CHARS = 2000;
+const _DEFAULT_FILE_LINK_LEVEL = 3;
 
 abstract class ILogger {
-  d(dynamic message, {String? prefix, int? maxChars, bool isJson = false});
+  /// method d
+  d(dynamic message,
+      {String? prefix, int? maxChars, bool isJson = false, int? fileLinkLevel});
+
+  /// method e
   e(dynamic message,
       {dynamic error,
       String? prefix,
       StackTrace? stackTrace,
       int? maxChars,
-      bool isJson = false});
-  i(dynamic message, {String? prefix, int? maxChars, bool isJson = false});
-  w(dynamic message, {String? prefix, int? maxChars, bool isJson = false});
+      bool isJson = false,
+      int? fileLinkLevel});
+
+  /// method i
+  i(dynamic message,
+      {String? prefix, int? maxChars, bool isJson = false, int? fileLinkLevel});
+
+  /// method w
+  w(dynamic message,
+      {String? prefix, int? maxChars, bool isJson = false, int? fileLinkLevel});
+
+  /// method trace
   trace(dynamic message,
       {dynamic error,
       String? prefix,
       StackTrace? stackTrace,
       int? maxChars,
-      bool isJson = false});
+      bool isJson = false,
+      int? fileLinkLevel});
+
+  /// method prod
   prod(Object? message, {bool isJson = false});
+
+  /// method withTag
   ILogger withTag(String prefix);
 }
 
 class _LoggerDeveloper {
+  /// method log
   void log(String message,
       {DateTime? time,
       String tag = '',
       Object? error,
       StackTrace? stackTrace,
-      required int level}) {
-    const verbose = String.fromEnvironment('d_log_verbose');
+      required int level,
+      int? fileLinkLevel}) {
+    const verbose = String.fromEnvironment('dart_log_verbose');
     if (verbose == 'true') {
-      print('[F] ${_getFilePath()}');
+      print('[F] ${_getFilePath(fileLinkLevel)}');
       print('[$tag] $message $error');
     } else {
-      dev.log(_getFilePath(), name: 'F');
+      dev.log(_getFilePath(fileLinkLevel), name: 'F');
       dev.log(message,
           time: time,
           name: tag,
@@ -48,11 +69,15 @@ class _LoggerDeveloper {
     }
   }
 
-  String _getFilePath() {
+  String _getFilePath([int? fileLinkLevel]) {
     try {
+      fileLinkLevel ??= _DEFAULT_FILE_LINK_LEVEL;
       final trace = StackTrace.current.toString();
-      final filePath =
-          trace.split("\n")[3].split("(")[1].replaceFirst(')', '').trim();
+      final filePath = trace
+          .split("\n")[fileLinkLevel]
+          .split("(")[1]
+          .replaceFirst(')', '')
+          .trim();
       return 'file: $filePath';
     } catch (_) {
       return '';
@@ -60,6 +85,7 @@ class _LoggerDeveloper {
   }
 }
 
+/// Logger implementation
 class Logger implements ILogger {
   static String prefix = 'DLOG';
   late final String _prefix;
@@ -68,24 +94,32 @@ class Logger implements ILogger {
 
   Logger({String? prefix}) : _prefix = prefix ?? Logger.prefix;
 
+  /// method d
   @override
-  d(dynamic message, {String? prefix, int? maxChars, bool isJson = false}) {
+  d(dynamic message,
+      {String? prefix,
+      int? maxChars,
+      bool isJson = false,
+      int? fileLinkLevel}) {
     try {
       _logger.log(
           _formatMessage(isJson ? jsonFormat(message) : message,
               prefix ?? _prefix, maxChars, isJson),
           tag: 'D',
-          level: _Level.debug);
+          level: _Level.debug,
+          fileLinkLevel: fileLinkLevel);
     } catch (_) {}
   }
 
+  /// method e
   @override
   e(dynamic message,
       {dynamic error,
       String? prefix,
       StackTrace? stackTrace,
       int? maxChars,
-      bool isJson = false}) {
+      bool isJson = false,
+      int? fileLinkLevel}) {
     try {
       _logger.log(
           _formatMessage(isJson ? jsonFormat(message) : message,
@@ -93,57 +127,66 @@ class Logger implements ILogger {
           tag: 'E',
           error: error,
           stackTrace: stackTrace,
-          level: _Level.error);
+          level: _Level.error,
+          fileLinkLevel: fileLinkLevel);
     } catch (_) {}
   }
 
+  /// method i
   @override
   i(dynamic message,
       {String? prefix,
       dynamic error,
       StackTrace? stackTrace,
       int? maxChars,
-      bool isJson = false}) {
+      bool isJson = false,
+      int? fileLinkLevel}) {
     try {
       _logger.log(
           _formatMessage(isJson ? jsonFormat(message) : message,
               prefix ?? _prefix, maxChars, isJson),
           tag: 'I',
-          level: _Level.info);
+          level: _Level.info,
+          fileLinkLevel: fileLinkLevel);
     } catch (_) {}
   }
 
+  /// method w
   @override
   w(dynamic message,
       {String? prefix,
       dynamic error,
       StackTrace? stackTrace,
       int? maxChars,
-      bool isJson = false}) {
+      bool isJson = false,
+      int? fileLinkLevel}) {
     try {
       _logger.log(
           _formatMessage(isJson ? jsonFormat(message) : message,
               prefix ?? _prefix, maxChars, isJson),
           tag: 'W',
-          level: _Level.warn);
+          level: _Level.warn,
+          fileLinkLevel: fileLinkLevel);
     } catch (_) {}
   }
 
+  /// method trace
   @override
   trace(dynamic message,
       {String? prefix,
       dynamic error,
       StackTrace? stackTrace,
       int? maxChars,
-      bool isJson = false}) {
+      bool isJson = false,
+      int? fileLinkLevel}) {
     try {
       _logger.log(
-        _formatMessage(isJson ? jsonFormat(message) : message,
-            prefix ?? _prefix, maxChars, isJson),
-        tag: 'TRACE',
-        stackTrace: stackTrace ?? StackTrace.current,
-        level: _Level.trace,
-      );
+          _formatMessage(isJson ? jsonFormat(message) : message,
+              prefix ?? _prefix, maxChars, isJson),
+          tag: 'TRACE',
+          stackTrace: stackTrace ?? StackTrace.current,
+          level: _Level.trace,
+          fileLinkLevel: fileLinkLevel);
     } catch (_) {}
   }
 
@@ -168,6 +211,7 @@ class Logger implements ILogger {
     return messageToPrint;
   }
 
+  /// withTag
   @override
   ILogger withTag(String prefix) {
     return Logger(prefix: prefix);
@@ -182,4 +226,5 @@ class _Level {
   static const int error = 1000;
 }
 
+// Global instance
 final ILogger logger = Logger();
