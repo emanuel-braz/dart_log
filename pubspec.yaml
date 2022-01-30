@@ -1,6 +1,6 @@
 name: dart_log
 description: A simple dart console logger (release mode enabled/disabled and "limitless" characters)
-version: 1.1.0
+version: 1.1.1
 homepage: https://github.com/emanuel-braz/dart_log
 
 environment:
