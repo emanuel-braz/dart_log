@@ -44,3 +44,12 @@ logger.d('long response from API', maxChars: 10000);
 // default = 3
 logger.d('Link to file', fileLinkLevel: 3);
 ```
+
+#### Interceptors 
+Use the `DefaultLogInterceptor` or implement a custom `LogInterceptor`
+
+```dart
+Logger.interceptors.add(DefaultLogInterceptor((Object? data) {
+    print('ERROR: $data');
+}, logTypes: [LogType.error]));
+```
