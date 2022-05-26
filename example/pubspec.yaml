@@ -1,0 +1,12 @@
+name: example
+description: example project
+version: 1.0.0
+homepage: https://github.com/emanuel-braz/dart_log
+publish_to: none
+
+environment:
+  sdk: '>=2.15.1 <3.0.0'
+
+dependencies:
+  dart_log: 
+    path: ../

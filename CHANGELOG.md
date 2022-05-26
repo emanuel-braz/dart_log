@@ -1,3 +1,8 @@
+## 1.2.0
+[2022-05-25]
+### Added
+- interceptor feature
+
 ## 1.1.1
 [2022-01-30]
 ### Chore

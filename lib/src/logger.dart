@@ -2,6 +2,8 @@
 // ignore_for_file: constant_identifier_names
 import 'dart:developer' as dev;
 import 'dart:math';
+
+import 'package:dart_log/dart_log.dart';
 import 'package:dart_log/src/util/util.dart';
 
 const _MAX_CHARS = 2000;
@@ -88,6 +90,7 @@ class _LoggerDeveloper {
 /// Logger implementation
 class Logger implements ILogger {
   static String prefix = 'DLOG';
+  static final List<LogInterceptor> interceptors = <LogInterceptor>[];
   late final String _prefix;
 
   final _logger = _LoggerDeveloper();
@@ -102,12 +105,16 @@ class Logger implements ILogger {
       bool isJson = false,
       int? fileLinkLevel}) {
     try {
-      _logger.log(
-          _formatMessage(isJson ? jsonFormat(message) : message,
-              prefix ?? _prefix, maxChars, isJson),
-          tag: 'D',
-          level: _Level.debug,
-          fileLinkLevel: fileLinkLevel);
+      final formattedMessage = _formatMessage(
+          isJson ? jsonFormat(message) : message,
+          prefix ?? _prefix,
+          maxChars,
+          isJson);
+
+      intercept(formattedMessage, LogType.debug);
+
+      _logger.log(formattedMessage,
+          tag: 'D', level: _Level.debug, fileLinkLevel: fileLinkLevel);
     } catch (_) {}
   }
 
@@ -121,9 +128,16 @@ class Logger implements ILogger {
       bool isJson = false,
       int? fileLinkLevel}) {
     try {
-      _logger.log(
-          _formatMessage(isJson ? jsonFormat(message) : message,
-              prefix ?? _prefix, maxChars, isJson),
+      final formattedMessage = _formatMessage(
+          isJson ? jsonFormat(message) : message,
+          prefix ?? _prefix,
+          maxChars,
+          isJson);
+
+      intercept('$formattedMessage' '\n${error ?? ''}' '\n${stackTrace ?? ''}',
+          LogType.error);
+
+      _logger.log(formattedMessage,
           tag: 'E',
           error: error,
           stackTrace: stackTrace,
@@ -142,12 +156,16 @@ class Logger implements ILogger {
       bool isJson = false,
       int? fileLinkLevel}) {
     try {
-      _logger.log(
-          _formatMessage(isJson ? jsonFormat(message) : message,
-              prefix ?? _prefix, maxChars, isJson),
-          tag: 'I',
-          level: _Level.info,
-          fileLinkLevel: fileLinkLevel);
+      final formattedMessage = _formatMessage(
+          isJson ? jsonFormat(message) : message,
+          prefix ?? _prefix,
+          maxChars,
+          isJson);
+
+      intercept(formattedMessage, LogType.info);
+
+      _logger.log(formattedMessage,
+          tag: 'I', level: _Level.info, fileLinkLevel: fileLinkLevel);
     } catch (_) {}
   }
 
@@ -161,12 +179,16 @@ class Logger implements ILogger {
       bool isJson = false,
       int? fileLinkLevel}) {
     try {
-      _logger.log(
-          _formatMessage(isJson ? jsonFormat(message) : message,
-              prefix ?? _prefix, maxChars, isJson),
-          tag: 'W',
-          level: _Level.warn,
-          fileLinkLevel: fileLinkLevel);
+      final formattedMessage = _formatMessage(
+          isJson ? jsonFormat(message) : message,
+          prefix ?? _prefix,
+          maxChars,
+          isJson);
+
+      intercept(formattedMessage, LogType.warn);
+
+      _logger.log(formattedMessage,
+          tag: 'W', level: _Level.warn, fileLinkLevel: fileLinkLevel);
     } catch (_) {}
   }
 
@@ -180,9 +202,16 @@ class Logger implements ILogger {
       bool isJson = false,
       int? fileLinkLevel}) {
     try {
-      _logger.log(
-          _formatMessage(isJson ? jsonFormat(message) : message,
-              prefix ?? _prefix, maxChars, isJson),
+      final formattedMessage = _formatMessage(
+          isJson ? jsonFormat(message) : message,
+          prefix ?? _prefix,
+          maxChars,
+          isJson);
+
+      intercept('$formattedMessage\n${stackTrace ?? StackTrace.current}',
+          LogType.trace);
+
+      _logger.log(formattedMessage,
           tag: 'TRACE',
           stackTrace: stackTrace ?? StackTrace.current,
           level: _Level.trace,
@@ -192,8 +221,11 @@ class Logger implements ILogger {
 
   /// This will be logged in production environment (Use carefully)
   @override
-  prod(dynamic message, {bool isJson = false}) =>
-      print(isJson ? jsonFormat(message) : message);
+  prod(dynamic message, {bool isJson = false}) {
+    final formattedMessage = isJson ? jsonFormat(message) : message;
+    intercept(formattedMessage, LogType.prod);
+    print(formattedMessage);
+  }
 
   _formatMessage(dynamic message,
       [String? prefix, int? maxChars, bool isJson = false]) {
@@ -215,6 +247,12 @@ class Logger implements ILogger {
   @override
   ILogger withTag(String prefix) {
     return Logger(prefix: prefix);
+  }
+
+  void intercept(Object? message, LogType logType) {
+    for (var interceptor in interceptors) {
+      interceptor.log(message, logType);
+    }
   }
 }
 
